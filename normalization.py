@@ -21,4 +21,4 @@ df_num_scaled=pd.DataFrame(df_num_scaled,columns=df_num.columns)
 print(df_num_scaled.head())
 
 df_final=df_num_scaled
-df_final.to_csv('normalized_house_price_dataset.csv',index=False)
+df_final.to_csv('final_dataset.csv',index=False)
