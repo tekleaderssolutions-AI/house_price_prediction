@@ -3,10 +3,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
-
 # Import dataset
 data = pd.read_csv(r"C:\Users\Srikanth Tata\Downloads\enhanced_house_price_dataset.csv")
 # print(data.head())
