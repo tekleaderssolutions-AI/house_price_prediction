@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Document head section with metadata and styles -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Prediction</title>
+    
+    <!-- CSS Styles -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .model-info {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-full {
+            grid-column: 1 / -1;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result-success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .result-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        #result h2 {
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        
+        .price {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #667eea;
+        }
+        
+        .model-name {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 10px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main container -->
+    <div class="container">
+        <h1>House Price Prediction</h1>
+        <p class="subtitle">Enter house features to predict the price</p>
+        <!-- <p class="model-info" id="modelInfo">Using best model from comparison</p> -->
+        
+        <!-- Prediction form -->
+        <form id="predictionForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="area">Area (sq ft)</label>
+                    <input type="number" id="area" name="area" required min="0" step="0.01" placeholder="e.g., 2000">
+                </div>
+                <div class="form-group">
+                    <label for="bedrooms">Bedrooms</label>
+                    <input type="number" id="bedrooms" name="bedrooms" required min="0" placeholder="e.g., 3">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bathrooms">Bathrooms</label>
+                    <input type="number" id="bathrooms" name="bathrooms" required min="0" placeholder="e.g., 2">
+                </div>
+                <div class="form-group">
+                    <label for="stories">Stories</label>
+                    <input type="number" id="stories" name="stories" required min="0" placeholder="e.g., 2">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="parking">Parking Spaces</label>
+                    <input type="number" id="parking" name="parking" required min="0" placeholder="e.g., 1">
+                </div>
+                <div class="form-group">
+                    <label for="age">Age (years)</label>
+                    <input type="number" id="age" name="age" required min="0" placeholder="e.g., 10">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <select id="city" name="city" required>
+                        <option value="">Select City</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Kolkata">Kolkata</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Pune">Pune</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="furnishing">Furnishing</label>
+                    <select id="furnishing" name="furnishing" required>
+                        <option value="">Select Furnishing</option>
+                        <option value="Furnished">Furnished</option>
+                        <option value="Semi-Furnished">Semi-Furnished</option>
+                        <option value="Unfurnished">Unfurnished</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="main_road">Main Road</label>
+                    <select id="main_road" name="main_road" required>
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="guest_room">Guest Room</label>
+                    <select id="guest_room" name="guest_room" required>
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="basement">Basement</label>
+                    <select id="basement" name="basement" required>
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="water_supply">Water Supply</label>
+                    <select id="water_supply" name="water_supply" required>
+                        <option value="">Select Type</option>
+                        <option value="Both">Both</option>
+                        <option value="Borewell">Borewell</option>
+                        <option value="Corporation">Corporation</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="air_conditioning">Air Conditioning</label>
+                    <select id="air_conditioning" name="air_conditioning" required>
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="preferred_tenant">Preferred Tenant</label>
+                    <select id="preferred_tenant" name="preferred_tenant" required>
+                        <option value="">Select Type</option>
+                        <option value="Bachelor">Bachelor</option>
+                        <option value="Company">Company</option>
+                        <option value="Family">Family</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group form-full">
+                <label for="locality_rating">Locality Rating (1-10)</label>
+                <input type="number" id="locality_rating" name="locality_rating" required min="1" max="10" placeholder="e.g., 5">
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Predict Price
+            </button>
+        </form>
+        
+        <!-- Result display area -->
+        <div id="result"></div>
+    </div>
+    
+    <!-- JavaScript for form handling and API communication -->
+    <script>
+        const form = document.getElementById('predictionForm');
+        const resultDiv = document.getElementById('result');
+        const submitBtn = document.getElementById('submitBtn');
+        const modelInfo = document.getElementById('modelInfo');
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Predicting... <span class="loading"></span>';
+            resultDiv.style.display = 'none';
+            
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result-success';
+                    resultDiv.innerHTML = `
+                        <h2>Predicted House Price</h2>
+                        <div class="price">${data.formatted_price}</div>
+                        <div class="model-name">Model: ${data.model_name || 'Unknown'}</div>
+                    `;
+                    resultDiv.style.display = 'block';
+                } else {
+                    resultDiv.className = 'result-error';
+                    resultDiv.innerHTML = `
+                        <h2>Error</h2>
+                        <p>${data.error || 'An error occurred'}</p>
+                    `;
+                    resultDiv.style.display = 'block';
+                }
+            } catch (error) {
+                resultDiv.className = 'result-error';
+                resultDiv.innerHTML = `
+                    <h2>Error</h2>
+                    <p>Failed to connect to server. Please try again.</p>
+                `;
+                resultDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Predict Price';
+            }
+        });
+    </script>
+</body>
+</html>
