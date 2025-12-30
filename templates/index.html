@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>House Price Prediction</title>
+</head>
+<body>
+    <h2>House Price Prediction</h2>
+
+    {% if prediction %}
+        <h3>Predicted Price ({{ model }}): {{ prediction }}</h3>
+    {% endif %}
+    {% if error %}
+        <h3 style="color:red">{{ error }}</h3>
+    {% endif %}
+
+    <form action="/predict" method="post">
+        <label>Model:</label>
+        <select name="model" required>
+            <option value="random_forest">Random Forest</option>
+            <option value="linear_regression">Linear Regression</option>
+            <option value="svm">SVM</option>
+            <option value="decision_tree">Decision Tree</option>
+        </select>
+        <br><br>
+
+        <label>City:</label>
+        <input type="text" name="City" required><br><br>
+
+        <label>Water Supply:</label>
+        <input type="text" name="Water Supply" required><br><br>
+
+        <label>Preferred Tenant:</label>
+        <input type="text" name="Preferred Tenant" required><br><br>
+
+        <label>Furnishing:</label>
+        <input type="text" name="Furnishing" required><br><br>
+
+        <label>Bedrooms:</label>
+        <input type="number" name="Bedrooms" required><br><br>
+
+        <label>Bathrooms:</label>
+        <input type="number" name="Bathrooms" required><br><br>
+
+        <label>Age:</label>
+        <input type="number" name="Age" required><br><br>
+
+        <label>Main Road:</label>
+        <select name="Main Road">
+            <option>Yes</option>
+            <option>No</option>
+        </select><br><br>
+
+        <label>Guest Room:</label>
+        <select name="Guest Room">
+            <option>Yes</option>
+            <option>No</option>
+        </select><br><br>
+
+        <label>Basement:</label>
+        <select name="Basement">
+            <option>Yes</option>
+            <option>No</option>
+        </select><br><br>
+
+        <label>Air Conditioning:</label>
+        <select name="Air Conditioning">
+            <option>Yes</option>
+            <option>No</option>
+        </select><br><br>
+
+        <label>Area:</label>
+        <input type="number" name="Area" required><br><br>
+
+        <button type="submit">Predict Price</button>
+    </form>
+</body>
+</html>

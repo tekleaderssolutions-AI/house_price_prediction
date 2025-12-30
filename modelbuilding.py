@@ -8,7 +8,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
 from sklearn.model_selection import GridSearchCV
 
-df=pd.read_csv('final_dataset.csv')
+df=pd.read_csv('preprocessed_house_price_dataset.csv')
 
 x=df.drop(columns=['Price'])
 y=df['Price']
@@ -111,4 +111,3 @@ with open(dt_model_filename, 'wb') as file:
 
 with open(lr_model_filename, 'wb') as file:
     pickle.dump(lr_model, file)
-    
