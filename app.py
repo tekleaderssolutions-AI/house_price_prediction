@@ -2,6 +2,7 @@ import pandas as pd
 import pickle
 from flask import Flask, request, render_template
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from preprocessing import feature_engineering, binary_encoding, normalization
 
 app = Flask(__name__)
 
@@ -26,26 +27,10 @@ with open("model_columns.pkl", "rb") as f:
 
 def preprocess_input(data):
     df = pd.DataFrame([data])
+    df=feature_engineering(df)
+    df=binary_encoding(df)
+    df=normalization(df)
 
-    
-    numeric_fields = ["Bedrooms", "Bathrooms", "Age", "Area"]
-    for field in numeric_fields:
-        df[field] = df[field].astype(float)
-
-    
-    df["rooms"] = df["Bedrooms"] + df["Bathrooms"]
-    df = df.drop(columns=["Bedrooms", "Bathrooms", "Age"])
-
-    cat_cols = ["City", "Water Supply", "Preferred Tenant", "Furnishing"]
-    encoded = onehot.transform(df[cat_cols])
-    encoded_df = pd.DataFrame(encoded, columns=onehot.get_feature_names_out(cat_cols))
-
-    df = pd.concat([df.drop(columns=cat_cols).reset_index(drop=True),
-                    encoded_df.reset_index(drop=True)], axis=1)
-
-
-    yes_no_cols = ["Main Road", "Guest Room", "Basement", "Air Conditioning"]
-    df[yes_no_cols] = df[yes_no_cols].replace({"Yes": 1, "No": 0})
 
     df = df.reindex(columns=columns, fill_value=0)
 
@@ -77,6 +62,7 @@ def predict():
     try:   
         request_data = request.form.to_dict()
         model_name = request_data.pop("model", None)
+        
         if not model_name:
             return render_template("index.html", error="Please select a model.")
         price = predict_price(request_data, model_name)

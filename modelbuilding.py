@@ -2,16 +2,33 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import pickle
 from sklearn.metrics import mean_squared_error, r2_score,accuracy_score
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
 from sklearn.model_selection import GridSearchCV
+from preprocessing import feature_engineering, binary_encoding, normalization, null_check, dupli
 
-df=pd.read_csv('preprocessed_house_price_dataset.csv')
+data=pd.read_csv('enhanced_house_price_dataset.csv')
+print(null_check(data))
+print(dupli(data))
 
-x=df.drop(columns=['Price'])
-y=df['Price']
+
+data = feature_engineering(data)
+data_2=binary_encoding(data)
+x=data_2.drop(columns=['Price'])
+y=data_2['Price']
+
+data_final=normalization(x)
+
+df_final_preprocessed = pd.concat([data_final.reset_index(drop=True), y.reset_index(drop=True)], axis=1)
+
+model_columns = df_final_preprocessed.drop(columns=['Price']).columns.tolist()
+with open('model_columns.pkl', 'wb') as f:
+    pickle.dump(model_columns, f)
+
+
 
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
