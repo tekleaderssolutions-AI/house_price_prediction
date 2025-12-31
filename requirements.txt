@@ -1,0 +1,12 @@
+# Flask web framework for creating the web application
+Flask==3.0.0
+
+# Pandas library for data manipulation and analysis
+pandas==2.1.4
+
+# NumPy library for numerical operations
+numpy==1.26.2
+
+# Scikit-learn library for machine learning models and preprocessing
+scikit-learn==1.3.2
+
