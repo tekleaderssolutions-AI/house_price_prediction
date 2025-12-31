@@ -1,77 +1,60 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.preprocessing import OneHotEncoder
 import pickle
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+class Datapreprocessing:
+    def __init__(self):
+        self.ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+        self.sc = StandardScaler()
 
-def null_check(df):
-    return (df.isnull().sum())
-
-def dupli(df):
-    duplicates = df.duplicated().sum()
-    return (duplicates)
-
-def outliers(df):
-    num_col=df.select_dtypes(include=['float64', 'int64']).columns
-    for col in num_col:
-        plt.figure(figsize=(8, 4))
-        sns.boxplot(x=df[col])
-        plt.title(f'Boxplot of {col}')
-        plt.show()
-
-
-
-def feature_engineering(df):
-    df['rooms']=df['Bedrooms']+df['Bathrooms']
-    df=df.drop(columns=['Bedrooms','Bathrooms','Age'])
-    ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
-    oh_cat_col = df[['City', 'Water Supply', 'Preferred Tenant', 'Furnishing']]
-    encoded_data = ohe.fit_transform(oh_cat_col)
-
-    one_hot_filename = 'ohe.pkl'
-    with open(one_hot_filename, 'wb') as file:
-        pickle.dump(ohe, file)
-
+    def null_check(self, df):
+        return df.isnull().sum()
     
-
-    encoded_df = pd.DataFrame(
-        encoded_data,
-        columns=ohe.get_feature_names_out()
-    )
-
+    def dupli(self, df):
+        return df.duplicated().sum()
     
-    df_enc_new = df.drop(columns=['City', 'Water Supply', 'Preferred Tenant', 'Furnishing'])
-    df_enc_new = pd.concat([df_enc_new.reset_index(drop=True), encoded_df.reset_index(drop=True)], axis=1)
+    # Feature engineering
+    def feature_engineering(self, df, ohe=None):
+        # Strip spaces from columns
+        df.columns = df.columns.str.strip()
 
+        # Rooms calculation
+        if 'Bedrooms' in df.columns and 'Bathrooms' in df.columns:
+            df['rooms'] = df['Bedrooms'] + df['Bathrooms']
+        df = df.drop(columns=['Bedrooms','Bathrooms','Age'], errors='ignore')
 
-    return df_enc_new
+        # One-hot encode categorical features
+        cat_cols = ['City', 'Water Supply', 'Preferred Tenant', 'Furnishing']
+        oh_data = df[cat_cols]
 
+        if ohe is not None:
+            encoded = ohe.transform(oh_data)
+        else:
+            encoded = self.ohe.fit_transform(oh_data)
+            with open('ohe.pkl', 'wb') as f:
+                pickle.dump(self.ohe, f)
 
-def binary_encoding(df_enc_new):
-    yes_no_cols = ['Main Road', 'Guest Room', 'Basement', 'Air Conditioning']
-    df_enc_new[yes_no_cols] = df_enc_new[yes_no_cols].replace({'Yes': 1, 'No': 0})
-   
-    return df_enc_new
+        encoded_df = pd.DataFrame(encoded, columns=ohe.get_feature_names_out() if ohe else self.ohe.get_feature_names_out())
+        df = df.drop(columns=cat_cols)
+        df = pd.concat([df.reset_index(drop=True), encoded_df.reset_index(drop=True)], axis=1)
+        return df
 
+    # Binary encoding
+    def binary_encoding(self, df):
+        yes_no_cols = ['Main Road', 'Guest Room', 'Basement', 'Air Conditioning']
+        for col in yes_no_cols:
+            if col in df.columns:
+                df[col] = df[col].replace({'Yes': 1, 'No': 0})
+        return df
 
-
-def normalization(x):
-    sc=StandardScaler()
-    df_num=x.select_dtypes(include=['float64', 'int64'])
-    df_num_scaled=sc.fit_transform(df_num)
-    df_num_scaled=pd.DataFrame(df_num_scaled,columns=df_num.columns)
-    scaler_filename = 'standard_scaler.pkl'
-    with open(scaler_filename, 'wb') as file:
-        pickle.dump(sc, file)
-
-
-    return df_num_scaled
-
-
-
-
-
+    # Normalization
+    def normalization(self, df, scaler=None):
+        num_cols = df.select_dtypes(include=['float64','int64']).columns
+        if scaler is not None:
+            scaled = scaler.transform(df[num_cols])
+        else:
+            scaled = self.sc.fit_transform(df[num_cols])
+            with open('standard_scaler.pkl','wb') as f:
+                pickle.dump(self.sc, f)
+        df[num_cols] = pd.DataFrame(scaled, columns=num_cols)
+        return df

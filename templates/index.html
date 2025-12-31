@@ -14,15 +14,39 @@
     {% endif %}
 
     <form action="/predict" method="post">
+        <!-- Model selection -->
         <label>Model:</label>
         <select name="model" required>
-            <option value="random_forest">Random Forest</option>
             <option value="linear_regression">Linear Regression</option>
-            <option value="svm">SVM</option>
+            <option value="random_forest">Random Forest</option>
             <option value="decision_tree">Decision Tree</option>
+            <option value="svm">SVM</option>
         </select>
         <br><br>
 
+        <!-- Numeric inputs -->
+        <label>Area:</label>
+        <input type="number" name="Area" required><br><br>
+
+        <label>Stories:</label>
+        <input type="number" name="Stories" required><br><br>
+
+        <label>Parking:</label>
+        <input type="number" name="Parking" required><br><br>
+
+        <label>Locality Rating:</label>
+        <input type="number" name="Locality Rating" required><br><br>
+
+        <label>Bedrooms:</label>
+        <input type="number" name="Bedrooms" required><br><br>
+
+        <label>Bathrooms:</label>
+        <input type="number" name="Bathrooms" required><br><br>
+
+        <label>Age:</label>
+        <input type="number" name="Age" required><br><br>
+
+        <!-- Categorical inputs -->
         <label>City:</label>
         <input type="text" name="City" required><br><br>
 
@@ -35,41 +59,30 @@
         <label>Furnishing:</label>
         <input type="text" name="Furnishing" required><br><br>
 
-        <label>Bedrooms:</label>
-        <input type="number" name="Bedrooms" required><br><br>
-
-        <label>Bathrooms:</label>
-        <input type="number" name="Bathrooms" required><br><br>
-
-        <label>Age:</label>
-        <input type="number" name="Age" required><br><br>
-
+        <!-- Yes/No inputs -->
         <label>Main Road:</label>
-        <select name="Main Road">
+        <select name="Main Road" required>
             <option>Yes</option>
             <option>No</option>
         </select><br><br>
 
         <label>Guest Room:</label>
-        <select name="Guest Room">
+        <select name="Guest Room" required>
             <option>Yes</option>
             <option>No</option>
         </select><br><br>
 
         <label>Basement:</label>
-        <select name="Basement">
+        <select name="Basement" required>
             <option>Yes</option>
             <option>No</option>
         </select><br><br>
 
         <label>Air Conditioning:</label>
-        <select name="Air Conditioning">
+        <select name="Air Conditioning" required>
             <option>Yes</option>
             <option>No</option>
         </select><br><br>
-
-        <label>Area:</label>
-        <input type="number" name="Area" required><br><br>
 
         <button type="submit">Predict Price</button>
     </form>

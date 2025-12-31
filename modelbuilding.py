@@ -1,130 +1,108 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
 import numpy as np
-from sklearn.linear_model import LinearRegression
 import pickle
-from sklearn.metrics import mean_squared_error, r2_score,accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
-from sklearn.model_selection import GridSearchCV
-from preprocessing import feature_engineering, binary_encoding, normalization, null_check, dupli
+from sklearn.metrics import mean_squared_error, r2_score
+from preprocessing import Datapreprocessing
 
-data=pd.read_csv('enhanced_house_price_dataset.csv')
-print(null_check(data))
-print(dupli(data))
+# --------------------------
+# Load data
+# --------------------------
+data = pd.read_csv('enhanced_house_price_dataset.csv')
+
+preprocessing = Datapreprocessing()
+
+# Check for nulls / duplicates
+print("Nulls:\n", preprocessing.null_check(data))
+print("Duplicates:", preprocessing.dupli(data))
 
 
-data = feature_engineering(data)
-data_2=binary_encoding(data)
-x=data_2.drop(columns=['Price'])
-y=data_2['Price']
+df = preprocessing.feature_engineering(data)
+df = preprocessing.binary_encoding(df)
 
-data_final=normalization(x)
 
-df_final_preprocessed = pd.concat([data_final.reset_index(drop=True), y.reset_index(drop=True)], axis=1)
+X = df.drop(columns=['Price'])
+y = df['Price']
 
-model_columns = df_final_preprocessed.drop(columns=['Price']).columns.tolist()
+X_scaled = preprocessing.normalization(X)
+
+
+df_final = pd.concat([X_scaled.reset_index(drop=True), y.reset_index(drop=True)], axis=1)
+model_columns = X_scaled.columns.tolist()
+
+# Save model columns
 with open('model_columns.pkl', 'wb') as f:
     pickle.dump(model_columns, f)
 
 
-
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-
+x_train, x_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
 
-# Linear Regression
-lr_model = LinearRegression()
-lr_model.fit(x_train, y_train)
-y_pred_lr = lr_model.predict(x_test)
-
-mse_lr = mean_squared_error(y_test, y_pred_lr)
-r2_lr = r2_score(y_test, y_pred_lr)
-print(f'Linear Regression - MSE: {mse_lr}, R2: {r2_lr}')
-
-# Random Forest Regressor
-rf_model = RandomForestRegressor(
-    n_estimators=300,
-    max_depth=None,
-    max_features='sqrt',
-    min_samples_leaf=1,
-    min_samples_split=2,
-    random_state=42
-)
-
-rf_model.fit(x_train, y_train)
-y_pred_rf = rf_model.predict(x_test)    
-mse_rf = mean_squared_error(y_test, y_pred_rf)
-r2_rf = r2_score(y_test, y_pred_rf)
-
-print(f'Random Forest Regressor - MSE: {mse_rf}, R2: {r2_rf}')
-
-'''
-
-\
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [None, 10, 20, 30],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4],
-    'max_features': ['auto', 'sqrt', 'log2']
-}
-
-rf = RandomForestRegressor(random_state=42)
-grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, scoring='r2')
-grid_search.fit(x_train, y_train)
-
-best_rf = grid_search.best_estimator_
-print(grid_search.best_params_)
-'''
+class ModelBuilding:
+    def __init__(self):
+        self.lr_model = LinearRegression()
+        self.rf_model = RandomForestRegressor(n_estimators=300, max_features='sqrt', random_state=42)
+        self.dt_model = DecisionTreeRegressor(random_state=42)
+        self.svr_model = SVR(C=100, epsilon=0.01, kernel='linear')
 
 
-# Decision Tree Regressor
-dt_model = DecisionTreeRegressor(random_state=42)
-dt_model.fit(x_train, y_train)
-y_pred_dt = dt_model.predict(x_test)
-mse_dt = mean_squared_error(y_test, y_pred_dt)
-r2_dt = r2_score(y_test, y_pred_dt)
-print(f'Decision Tree Regressor - MSE: {mse_dt}, R2: {r2_dt}')
+    def lr(self, x_train, y_train, x_test, y_test):
+        y_train_log = np.log1p(y_train)
+        self.lr_model.fit(x_train, y_train_log)
+        log_pred = self.lr_model.predict(x_test)
+        y_pred = np.expm1(log_pred)  # inverse log-transform
+        mse = mean_squared_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+        # Save model
+        with open('linear_regression_model.pkl', 'wb') as f:
+            pickle.dump(self.lr_model, f)
+        return f'Linear Regression - MSE: {mse}, R2: {r2}'
 
-# Support Vector Regressor
-svr_model = SVR(C=100, epsilon=0.01, kernel='linear')
-svr_model.fit(x_train, y_train)
-y_pred_svr = svr_model.predict(x_test)
-mse_svr = mean_squared_error(y_test, y_pred_svr)
-r2_svr = r2_score(y_test, y_pred_svr)
-print(f'Support Vector Regressor - MSE: {mse_svr}, R2: {r2_svr}')
+    # ----------------------
+    # Random Forest
+    # ----------------------
+    def rf(self, x_train, y_train, x_test, y_test):
+        self.rf_model.fit(x_train, y_train)
+        y_pred = self.rf_model.predict(x_test)
+        mse = mean_squared_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+        with open('random_forest_model.pkl', 'wb') as f:
+            pickle.dump(self.rf_model, f)
+        return f'Random Forest Regressor - MSE: {mse}, R2: {r2}'
 
-'''
-param_grid = {
-    'C': [0.1, 1, 10, 100],
-    'epsilon': [0.01, 0.1, 0.5],
-    'kernel': ['rbf', 'linear', 'poly']
-}
+    # ----------------------
+    # Decision Tree
+    # ----------------------
+    def dt(self, x_train, y_train, x_test, y_test):
+        self.dt_model.fit(x_train, y_train)
+        y_pred = self.dt_model.predict(x_test)
+        mse = mean_squared_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+        with open('decision_tree_model.pkl', 'wb') as f:
+            pickle.dump(self.dt_model, f)
+        return f'Decision Tree Regressor - MSE: {mse}, R2: {r2}'
 
-svr = SVR()
-grid_search = GridSearchCV(svr, param_grid, cv=5, scoring='r2')
-grid_search.fit(x_train, y_train)
+    # ----------------------
+    # Support Vector Regressor
+    # ----------------------
+    def svr(self, x_train, y_train, x_test, y_test):
+        self.svr_model.fit(x_train, y_train)
+        y_pred = self.svr_model.predict(x_test)
+        mse = mean_squared_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+        with open('svm_model.pkl', 'wb') as f:
+            pickle.dump(self.svr_model, f)
+        return f'Support Vector Regressor - MSE: {mse}, R2: {r2}'
 
-best_svr = grid_search.best_estimator_
-print(grid_search.best_params_)
-'''
-
-import pickle
-rf_model_filename = 'random_forest_model.pkl'
-svm_model_filename = 'svm_model.pkl'
-dt_model_filename = 'decision_tree_model.pkl'
-lr_model_filename = 'linear_regression_model.pkl'
-
-with open(rf_model_filename, 'wb') as file:
-    pickle.dump(rf_model, file) 
-
-with open(svm_model_filename, 'wb') as file:
-    pickle.dump(svr_model, file)
-
-with open(dt_model_filename, 'wb') as file:
-    pickle.dump(dt_model, file)
-
-with open(lr_model_filename, 'wb') as file:
-    pickle.dump(lr_model, file)
+# --------------------------
+# Train and evaluate all models
+# --------------------------
+builder = ModelBuilding()
+print(builder.lr(x_train, y_train, x_test, y_test))
+print(builder.rf(x_train, y_train, x_test, y_test))
+print(builder.dt(x_train, y_train, x_test, y_test))
+print(builder.svr(x_train, y_train, x_test, y_test))
